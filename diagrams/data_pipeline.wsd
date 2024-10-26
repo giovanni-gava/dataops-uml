@@ -18,12 +18,15 @@ System_Boundary(olap, "OLAP") {
     }
 
     System_Boundary(analytics, "Data Analytics") {
-        ContainerDb(dw, "Data Warehouse(gold)", "Microsoft SQL/Oracle")
+        ContainerDb(silver, "Trusted(silver)", "Microsoft SQL/Oracle")
+        Container(transformation_bronze_silver, "Transformation", "dbt", "Padronizacao e limpeza")
+
+        ContainerDb(gold, "Data Warehouse(gold)", "Microsoft SQL/Oracle")
         Container(transformation, "Transformation", "dbt", "Padronização e limpeza")
     }
 
     System_Boundary(ingestion, "Data Ingestion (EL)") {
-        ContainerDb(raw, "Raw (bronze)")
+        ContainerDb(bronze, "Raw (bronze)")
         Container(extraction, "Extraction", "airbyte", "Extração e carga de dados")
     }
 }
@@ -39,19 +42,24 @@ Rel(external_db, extraction, "Coletar dados")
 Rel(external_queue, extraction, "Coletar dados")
 Rel(external_api, extraction, "Coletar dados")
 Rel(external_storage, extraction, "Coletar dados")
-Rel(extraction, raw, "Persistir dados")
+Rel(extraction, bronze, "Persistir dados")
 
 Rel(oltp, olap, "Fornecer dados")
 Rel(ingestion, analytics, "Atualizar dados")
 
 Rel(user, dash, "Visualizar")
-Rel(dash, dw, "Carregar dados")
+Rel(dash, gold, "Carregar dados")
 
-Rel(transformation, dw, "Persistir dados transformados")
-Rel(raw, transformation, "Coletar dados")
+Rel(transformation, gold, "Persistir dados transformados")
+Rel(bronze, transformation, "Coletar dados")
 
 Rel(data_scientist, ia, "Criar algoritmos de machine learning")
-Rel(ia, dw, "Carregar dados")
+Rel(ia, gold, "Carregar dados")
 
+Rel(bronze, transformation_bronze_silver, "Coletar dados")
+Rel(transformation_bronze_silver, silver, "Persistir dados transformados")
 
 @enduml
+
+
+#Raw transformation e transformation para silver
